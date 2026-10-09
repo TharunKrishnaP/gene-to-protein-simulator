@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gene-to-Protein Kitchen</title>
+  <meta name="description" content="An interactive gene-to-protein cooking simulator: transcribe DNA, translate codons, fold and mutate proteins.">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-dish">&#129516;</span>
+        <div>
+          <h1>Gene-to-Protein Kitchen</h1>
+          <p class="tagline">Read the recipe in DNA. Cook it as mRNA. Plate the folded protein.</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="btn-sample" class="ghost">🎲 Random recipe</button>
+        <span class="build-badge">Phase 1–4 build · zero dependencies</span>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- ============================ Recipe book + prep counter ========== -->
+      <section class="panel" id="panel-recipe">
+        <h2>📖 Recipe Book</h2>
+        <div id="recipeFilters" class="filter-row"></div>
+        <div id="recipeList" class="recipe-list"></div>
+
+        <div class="divider"></div>
+
+        <h2>🧑‍🍳 Prep Counter</h2>
+        <p class="muted" style="margin:0 0 8px;font-size:12.5px;">Tap nucleotides to build your own mRNA strand.</p>
+        <div class="palette" id="basePalette"></div>
+
+        <div class="strand-editor">
+          <div class="strand-label"><span>mRNA strand</span><span id="strandCount">0 nt</span></div>
+          <div id="strandTrack" class="strand-track"></div>
+        </div>
+
+        <div class="prep-actions">
+          <button id="btn-backspace" class="ghost small">⌫ Backspace</button>
+          <button id="btn-clear" class="ghost small">Clear</button>
+          <button id="btn-cook" class="primary">🍳 Cook this gene</button>
+        </div>
+        <p id="strandHint" class="hint"></p>
+      </section>
+
+      <!-- ============================ Ribosome kitchen ==================== -->
+      <section class="panel" id="panel-kitchen">
+        <h2>🍳 The Ribosome Kitchen</h2>
+        <div class="kitchen-head">
+          <div class="readout">
+            <span id="kitchenDish">No dish yet</span>
+            <span id="kitchenCodon" class="muted">—</span>
+          </div>
+          <div class="kitchen-controls">
+            <button id="btn-kplay" class="primary small">▶ Play</button>
+            <button id="btn-kstep" class="ghost small">⏭ Step</button>
+            <button id="btn-kreset" class="ghost small">↺ Reset</button>
+            <label class="speed">Speed
+              <input id="kitchenSpeed" type="range" min="1" max="10" step="1" value="3">
+              <span id="speedReadout" class="speed-value">1.5 /s</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="kitchenCanvas"></canvas>
+        </div>
+        <div class="progress"><div id="kitchenProgress" class="progress-bar"></div></div>
+        <div id="sequenceReadout" class="sequence-readout"></div>
+      </section>
+
+      <!-- ============================ Plating & folding ================== -->
+      <section class="panel" id="panel-plate">
+        <h2>🍽️ Plating &amp; Folding</h2>
+        <div class="canvas-wrap plate-wrap">
+          <canvas id="plateCanvas"></canvas>
+        </div>
+        <div class="plate-actions">
+          <button id="btn-fold-replay" class="ghost small">↻ Re-fold</button>
+          <label class="toggle"><input id="plateRotate" type="checkbox" checked> Auto-rotate</label>
+          <label class="toggle"><input id="plateLabels" type="checkbox"> Labels</label>
+        </div>
+        <div id="foldStats" class="fold-stats"></div>
+        <div id="foldLegend" class="legend"></div>
+        <div id="proteinInfo" class="protein-info"></div>
+      </section>
+
+      <!-- ============================ Mutation sandbox =================== -->
+      <section class="panel wide" id="panel-mutation">
+        <h2>🧪 Mutation Sandbox</h2>
+        <p class="muted" style="margin-top:0;">Pick a base in the mRNA sequence, choose a replacement, and watch the dish change.</p>
+
+        <div class="mutation-layout">
+          <div class="mutation-controls">
+            <div class="strand-label"><span>Click a base to edit it</span><span id="mutationPosLabel" class="muted">—</span></div>
+            <div class="strand-shell" id="mutationStrandShell">
+              <div id="mutationStrand" class="strand-track selectable"></div>
+              <div id="mutationPicker" class="base-picker hidden">
+                <span class="picker-title">Replace with</span>
+                <div id="mutationPalette" class="palette"></div>
+              </div>
+            </div>
+
+            <div class="strand-label" style="margin-top:14px;"><span>Pending edits</span><span id="mutationCount" class="muted"></span></div>
+            <div id="mutationTray" class="edit-tray"></div>
+
+            <div class="strand-label" style="margin-top:14px;"><span>Quick mutations</span><span class="muted small">adds one edit</span></div>
+            <div class="preset-row" id="mutationPresets">
+              <button type="button" class="ghost small" data-preset="silent">🧬 Silent</button>
+              <button type="button" class="ghost small" data-preset="missense">🔄 Missense</button>
+              <button type="button" class="ghost small" data-preset="nonsense">⛔ Nonsense</button>
+              <button type="button" class="ghost small" data-preset="start-loss">🚫 Start-loss</button>
+              <button type="button" class="ghost small" data-preset="stop-loss">🛑 Stop-loss</button>
+              <button type="button" class="ghost small" data-preset="random">🎲 Random</button>
+            </div>
+
+            <div class="impact">
+              <div class="impact-head"><span>Mutation impact</span><span id="impactLabel" class="muted">—</span></div>
+              <div class="impact-track"><div id="impactBar" class="impact-bar"></div></div>
+            </div>
+
+            <div class="prep-actions">
+              <button id="btn-commit-mutation" class="primary" disabled>✓ Insert into gene</button>
+              <button id="btn-undo-mutation" class="ghost small">↶ Undo edit</button>
+              <button id="btn-reset-mutation" class="ghost small">↺ Clear edits</button>
+              <button id="btn-mutagenize" class="ghost small">☢️ Mutagenize ×3</button>
+            </div>
+            <p class="hint">Keys: ← → move · Shift + ← / → jump a codon · A / U / C / G mutate · Delete revert · Enter insert · Z undo · R random</p>
+
+            <div id="mutationResult" class="mutation-result">
+              <p class="muted">Click a base above, then choose a replacement — or hit a quick mutation. Stack as many edits as you like.</p>
+            </div>
+          </div>
+
+          <div class="mutation-compare">
+            <div class="compare-head"><span>Wild type</span><span>Mutant</span></div>
+            <div class="compare-canvases">
+              <div class="mini-wrap"><canvas id="wtCanvas"></canvas><span id="wtLabel" class="mini-label">—</span><div id="wtStats" class="mini-stats"></div></div>
+              <div class="mini-wrap" id="mutWrap"><canvas id="mutCanvas"></canvas><span id="mutLabel" class="mini-label">waiting…</span><div id="mutStats" class="mini-stats"></div></div>
+            </div>
+            <div id="diffView" class="diff-view"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Vanilla JS · Canvas 2D folding physics · zero dependencies · run tests with <code>node --test</code></span>
+      <span class="muted">AUG = START (Met) · UAA / UAG / UGA = STOP</span>
+    </footer>
+  </div>
+
+  <!-- Data layer -->
+  <script src="src/data/codons.js"></script>
+  <!-- Phase 1 core -->
+  <script src="src/core/genetics.js"></script>
+  <script src="src/data/recipes.js"></script>
+  <!-- Phase 3 physics -->
+  <script src="src/fold/folding.js"></script>
+  <!-- Phase 2/3/4 views -->
+  <script src="src/ui/draw.js"></script>
+  <script src="src/ui/kitchen.js"></script>
+  <script src="src/ui/plate.js"></script>
+  <script src="src/ui/mutation.js"></script>
+  <!-- App -->
+  <script src="src/app.js"></script>
+</body>
+</html>

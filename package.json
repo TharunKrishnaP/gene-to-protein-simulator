@@ -1,0 +1,14 @@
+{
+  "name": "gene-to-protein-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive Gene-to-Protein cooking simulator: transcribe DNA, translate codons, fold and mutate proteins.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

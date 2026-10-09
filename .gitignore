@@ -1,0 +1,11 @@
+# Dependencies (the project has none, but be safe)
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
